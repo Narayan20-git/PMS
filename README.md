@@ -75,5 +75,5 @@ uv pip install -r requirements.txt
 ✅ You’re all set!
 Your environment is ready. You can now run your FastAPI app with:
 
-uv run uvicorn app.main:app --reload
+uv run uvicorn main:app --reload
 

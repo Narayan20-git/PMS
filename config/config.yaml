@@ -1,0 +1,3 @@
+supabase:
+  url: "https://gygmudaqinmwgpmngpce.supabase.co"
+  bucket_name: "property-data"

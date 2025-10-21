@@ -5,6 +5,8 @@ sqlalchemy
 pydantic
 jose
 pytest
-
+supabase
+PyYAML
+python-multipart
 
 -e .

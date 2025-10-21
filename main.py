@@ -1,12 +1,22 @@
 from fastapi import FastAPI
-#from routes import user_routes
+from fastapi.middleware.cors import CORSMiddleware
+from routes import property_routes
 
-app = FastAPI(title="Simple FastAPI App")
+app = FastAPI(title="Property Management System App")
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Register routers
-# app.include_router(health_routes.router)
-# app.include_router(user_routes.router)
+app.include_router(property_routes.router)
+
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to FastAPI app!"}
+    return {"message": "Property Management System App is running"}
