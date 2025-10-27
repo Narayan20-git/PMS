@@ -8,3 +8,4 @@ pytest
 supabase
 PyYAML
 python-multipart
+stripe

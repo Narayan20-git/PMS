@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import property_routes
+from routes import property_routes, tenant, stripe_webhook
 
 app = FastAPI(title="Property Management System App")
 
@@ -15,6 +15,8 @@ app.add_middleware(
 
 # Register routers
 app.include_router(property_routes.router)
+app.include_router(tenant.router)
+app.include_router(stripe_webhook.router)
 
 
 @app.get("/")
