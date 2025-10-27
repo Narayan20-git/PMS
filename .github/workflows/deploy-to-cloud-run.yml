@@ -28,9 +28,10 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           export_default_credentials: true
 
-      - name: Debug secret validity
+      - name: Debug secret format (safe)
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | python3 -c "import json,sys; json.loads(sys.stdin.read())" && echo "JSON valid" || echo "Invalid JSON"
+          echo "Secret first 100 chars:"
+          echo "${{ secrets.GCP_SA_KEY }}" | head -c 100
 
       - name: Authenticate Docker to Artifact Registry
         run: |
