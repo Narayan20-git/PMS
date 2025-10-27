@@ -33,10 +33,10 @@ jobs:
           echo "Secret first 100 chars:"
           echo "${{ secrets.GCP_SA_KEY }}" | head -c 100
 
+      # ✅ Authenticate Docker to Google Artifact Registry and GCR
       - name: Authenticate Docker to Artifact Registry
         run: |
           echo "${{ secrets.GCP_SA_KEY }}" | sed 's/\\n/\n/g' > key.json
-          cat key.json | jq . >/dev/null  # Validate JSON (optional, good check)
           gcloud auth activate-service-account --key-file=key.json
           gcloud auth configure-docker us-docker.pkg.dev --quiet
           gcloud auth configure-docker gcr.io --quiet
