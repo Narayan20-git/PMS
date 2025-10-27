@@ -1,0 +1,57 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - development  # runs on push to development branch
+
+  workflow_dispatch:   # Allow manual trigger
+    inputs:
+      image_tag:
+        description: "Tag for the Docker image (default: latest)"
+        required: false
+        default: "latest"
+
+jobs:
+  deploy:
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Debug secret validity
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" | python3 -c "import json,sys; json.loads(sys.stdin.read())" && echo "JSON valid" || echo "Invalid JSON"
+
+      - name: Authenticate Docker to Artifact Registry
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" | sed 's/\\n/\n/g' > key.json
+          cat key.json | jq . >/dev/null  # Validate JSON (optional, good check)
+          gcloud auth activate-service-account --key-file=key.json
+          gcloud auth configure-docker us-docker.pkg.dev --quiet
+          gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.CLOUD_RUN_SERVICE }}:latest .
+
+      - name: Push Docker image to GCR
+        run: |
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.CLOUD_RUN_SERVICE }}:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.CLOUD_RUN_SERVICE }}:latest \
+            --region ${{ secrets.GCP_REGION }} \
+            --allow-unauthenticated \
+            --set-env-vars SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_KEY }}
