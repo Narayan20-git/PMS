@@ -1,7 +1,15 @@
 import stripe
 import os
+from utils.config_loader import load_config
 
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")  # Make sure this is set in your .env
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+# Load YAML config
+config = load_config()
+
+# Your production URL (deployed FastAPI endpoint)
+VERIFICATION_CALLBACK_URL = config["webhook"]["url"]
+#VERIFICATION_CALLBACK_URL = os.getenv("VERIFICATION_RETURN_URL")
 
 def create_customer(name, email):
     """Create a Stripe customer"""
@@ -11,14 +19,13 @@ def create_customer(name, email):
     )
     return customer
 
+
 def create_verification_session(customer_id, tenant_id):
     """Create a Stripe Identity Verification Session"""
-    # Note: Do NOT pass `customer` unless using a connected endpoint that supports it
     session = stripe.identity.VerificationSession.create(
-        type="document",  # type of verification
-        metadata={"tenant_id": str(tenant_id)},  # optional, helpful to track
-        # Optional: return_url to redirect after verification
-        # return_url="https://yourapp.com/verification-complete"
+        type="document",
+        metadata={"tenant_id": str(tenant_id)},  #matches webhook now
+        return_url=f"{VERIFICATION_CALLBACK_URL}?session_id={{VERIFICATION_SESSION_ID}}"  #Redirect after success
     )
     
     return session.url

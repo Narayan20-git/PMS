@@ -1,3 +1,5 @@
 supabase:
   url: "https://gygmudaqinmwgpmngpce.supabase.co"
   bucket_name: "property-data"
+webhook:
+  url: "https://pms-fastapi-171379074103.asia-south1.run.app/verification"

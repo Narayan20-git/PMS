@@ -1,7 +1,6 @@
 import stripe
 import os
 from fastapi import APIRouter, Request, HTTPException
-from supabase import create_client
 from dotenv import load_dotenv
 from utils.supabase_connection import supabase
 
@@ -16,6 +15,7 @@ endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
 async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
+    print("🔔 Webhook received")
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
@@ -26,22 +26,22 @@ async def stripe_webhook(request: Request):
     event_type = event.get("type")
     session = event.get("data", {}).get("object", {})
 
-    # Verify identity event
     if event_type == "identity.verification_session.verified":
-        user_id = session.get("metadata", {}).get("user_id")
+        metadata = session.get("metadata", {})
+        tenant_id = metadata.get("tenant_id")
 
-        if not user_id:
-            print("⚠️ No user_id found in metadata!")
-            return {"status": "missing_user_id"}
+        print("Metadata:", metadata)
+        print("tenant_id:", tenant_id)
 
-        #Update Supabase tenant
-        response = (
-            supabase.table("tenants")
-            .update({"is_verified": True})
-            .eq("id", user_id)
+        if not tenant_id:
+            print("⚠️ No tenant_id in metadata!")
+            return {"status": "missing_tenant_id"}
+
+        resp = supabase.table("tenants") \
+            .update({"is_verified": True}) \
+            .eq("id", tenant_id) \
             .execute()
-        )
 
-        print(f"Tenant Verified User ID: {user_id}")
+        print("Updated tenant verification:", resp)
 
     return {"status": "success"}
